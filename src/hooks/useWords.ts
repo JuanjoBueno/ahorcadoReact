@@ -10,7 +10,6 @@ export const useWords = () => {
     try {
       const palabra = await WordAdapter.getWord();
 
-      // Verificar si palabra es un error
       if (palabra instanceof HttpError) {
         console.error('Errores al obtener la palabra:');
         return;
@@ -24,8 +23,8 @@ export const useWords = () => {
   };
 
   useEffect(() => {
-    loadWord(); // Se ejecuta al montar el hook
+    loadWord();
   }, []);
 
-  return {currentWord, loadWord}; // Retorna la palabra y la función para recargar
+  return {currentWord, loadWord};
 };

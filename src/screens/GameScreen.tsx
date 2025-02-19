@@ -1,61 +1,80 @@
 import {
   ActivityIndicator,
+  Alert,
   Button,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {useAppDispatch, useAppSelector} from '../redux/hooks';
 import {useWords} from '../hooks/useWords';
-import {mostrarWord, quitarAcentos} from '../logica/logicaJuego';
-import {useNavigation} from '@react-navigation/native';
+import {quitarAcentos} from '../logica/logicaJuego';
 import {changeScore} from '../redux/slices/playerSlice';
 
 export default function GameScreen() {
   const {name, score} = useAppSelector(state => state.player);
   const {currentWord, loadWord} = useWords();
   const [letra, setLetra] = useState('');
-  const dispatch = useAppDispatch();
-  const navigation = useNavigation();
-
   const [listLetras, setListLetras] = useState<string[]>([]);
+  const [wordDisplay, setWordDisplay] = useState('');
+  const [intentosFallidos, setIntentosFallidos] = useState(0);
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    if (currentWord) {
+      setWordDisplay(getMaskedWord(currentWord.palabra, listLetras));
+    }
+  }, [currentWord, listLetras]); // Se ejecuta cada vez que cambia la palabra o las letras usadas
 
   const validarLetra = (texto: string) => {
-    // Solo acepta letras (mayúsculas o minúsculas) y solo toma el primer carácter
     const soloLetras = texto.replace(/[^a-zA-ZñÑ]/g, '').toUpperCase();
     setLetra(soloLetras.slice(0, 1));
   };
+
   const intentarLetra = () => {
     if (letra && !listLetras.includes(letra) && currentWord) {
-      // Creamos la nueva lista de letras con la letra actual
       const nuevasLetras = [...listLetras, letra];
-      // Actualizamos el estado con la nueva lista
       setListLetras(nuevasLetras);
 
-      // Verificar si la letra está en la palabra (ignorando acentos)
       const palabraSinAcentos = quitarAcentos(
         currentWord.palabra.toUpperCase(),
       );
-      if (palabraSinAcentos.includes(letra)) {
-        // Calcular y actualizar score
-        const nuevoScore = score + 10;
-        dispatch(changeScore({score: nuevoScore}));
 
-        // Verificar si la palabra está completa usando nuevasLetras
+      if (palabraSinAcentos.includes(letra)) {
+        dispatch(changeScore({score: score + 10}));
+
         const letrasFaltantes = palabraSinAcentos
           .split('')
           .filter(l => !nuevasLetras.includes(l));
 
         if (letrasFaltantes.length === 0) {
-          // La palabra está completa
-          setTimeout(loadWord, 1000);
-          setListLetras([]); // Limpiar las letras para la siguiente palabra
+          setTimeout(() => {
+            Alert.alert(
+              'Enhorabuena!!',
+              'Palabra completada, a por la siguiente!!',
+            );
+            loadWord();
+            setListLetras([]);
+          }, 1000);
+        }
+      } else {
+        setIntentosFallidos(intentosFallidos + 1);
+
+        if (intentosFallidos + 1 >= 6) {
+          setTimeout(() => {
+            Alert.alert(
+              '¡Perdiste!',
+              `La palabra era: "${currentWord.palabra}"`,
+            );
+            loadWord();
+            setListLetras([]);
+            setIntentosFallidos(0);
+          }, 1000);
         }
       }
 
-      // Limpiar el input
       setLetra('');
     }
   };
@@ -63,13 +82,14 @@ export default function GameScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Jugador: {name}</Text>
+      <Text style={styles.subtitle}>Palabra:</Text>
+
       {currentWord ? (
-        <Text style={styles.word}>
-          {mostrarWord(currentWord.palabra, listLetras)}
-        </Text>
+        <Text style={styles.word}>{wordDisplay}</Text>
       ) : (
         <ActivityIndicator size="large" color="#A27B5C" />
       )}
+
       <TextInput
         style={styles.input}
         value={letra}
@@ -79,12 +99,11 @@ export default function GameScreen() {
         placeholderTextColor="#666"
         placeholder="?"
       />
+
       <View style={styles.buttonContainer}>
         <Button
           title="Intentar"
-          onPress={() => {
-            intentarLetra();
-          }}
+          onPress={intentarLetra}
           color="#A27B5C"
           disabled={!letra}
         />
@@ -94,10 +113,20 @@ export default function GameScreen() {
           color="#A27B5C"
         />
       </View>
+
       <Text style={styles.subtitle}>Score: {score}</Text>
     </View>
   );
 }
+
+const getMaskedWord = (word: string, letrasUsadas: string[]) => {
+  return word
+    .split('')
+    .map(letra =>
+      letrasUsadas.includes(quitarAcentos(letra.toUpperCase())) ? letra : ' _ ',
+    )
+    .join('');
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -122,15 +151,6 @@ const styles = StyleSheet.create({
     color: '#FFD700',
     marginVertical: 10,
   },
-  loading: {
-    fontSize: 18,
-    color: 'white',
-  },
-  error: {
-    fontSize: 18,
-    color: 'red',
-  },
-  // Nuevo estilo para el input
   input: {
     borderWidth: 2,
     borderColor: '#A27B5C',
@@ -144,7 +164,6 @@ const styles = StyleSheet.create({
     marginVertical: 20,
     backgroundColor: '#353a45',
   },
-  // Estilo para separar los botones
   buttonContainer: {
     gap: 10,
     marginVertical: 10,

@@ -1,6 +1,6 @@
 export const Config = {
   wordAPI: {
-    url: 'http://10.208.85.1:3000',
+    url: 'http://192.168.1.145:3000',
     type: '',
   },
 };
