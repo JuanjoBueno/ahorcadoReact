@@ -2,6 +2,7 @@ import {
   ActivityIndicator,
   Alert,
   Button,
+  Keyboard,
   StyleSheet,
   Text,
   TextInput,
@@ -11,7 +12,8 @@ import React, {useState, useEffect} from 'react';
 import {useAppDispatch, useAppSelector} from '../redux/hooks';
 import {useWords} from '../hooks/useWords';
 import {quitarAcentos} from '../logica/logicaJuego';
-import {changeScore} from '../redux/slices/playerSlice';
+import {changeName, changeScore} from '../redux/slices/playerSlice';
+import {useNavigation} from '@react-navigation/native';
 
 export default function GameScreen() {
   const {name, score} = useAppSelector(state => state.player);
@@ -21,12 +23,13 @@ export default function GameScreen() {
   const [wordDisplay, setWordDisplay] = useState('');
   const [intentosFallidos, setIntentosFallidos] = useState(0);
   const dispatch = useAppDispatch();
+  const navigation = useNavigation();
 
   useEffect(() => {
     if (currentWord) {
-      setWordDisplay(getMaskedWord(currentWord.palabra, listLetras));
+      setWordDisplay(ocultarPalabra(currentWord.palabra, listLetras));
     }
-  }, [currentWord, listLetras]); // Se ejecuta cada vez que cambia la palabra o las letras usadas
+  }, [currentWord, listLetras]);
 
   const validarLetra = (texto: string) => {
     const soloLetras = texto.replace(/[^a-zA-ZñÑ]/g, '').toUpperCase();
@@ -62,21 +65,39 @@ export default function GameScreen() {
       } else {
         setIntentosFallidos(intentosFallidos + 1);
 
-        if (intentosFallidos + 1 >= 6) {
+        if (intentosFallidos >= 5) {
           setTimeout(() => {
             Alert.alert(
               '¡Perdiste!',
               `La palabra era: "${currentWord.palabra}"`,
             );
-            loadWord();
             setListLetras([]);
             setIntentosFallidos(0);
           }, 1000);
+          navigation.navigate('Score');
         }
       }
 
       setLetra('');
     }
+  };
+
+  const ocultarPalabra = (word: string, letrasUsadas: string[]) => {
+    return word
+      .split('')
+      .map(letra =>
+        letrasUsadas.includes(quitarAcentos(letra.toUpperCase()))
+          ? letra
+          : ' _ ',
+      )
+      .join('');
+  };
+
+  const handleNext = () => {
+    dispatch(changeName({name: ''}));
+    Keyboard.dismiss();
+    dispatch(changeScore({score: 0}));
+    navigation.navigate('Home');
   };
 
   return (
@@ -102,31 +123,18 @@ export default function GameScreen() {
 
       <View style={styles.buttonContainer}>
         <Button
-          title="Intentar"
+          title="Aceptar"
           onPress={intentarLetra}
           color="#A27B5C"
           disabled={!letra}
         />
-        <Button
-          title="Obtener otra palabra"
-          onPress={loadWord}
-          color="#A27B5C"
-        />
+        <Button title="Salir" onPress={handleNext} color="#A27B5C" />
       </View>
 
       <Text style={styles.subtitle}>Score: {score}</Text>
     </View>
   );
 }
-
-const getMaskedWord = (word: string, letrasUsadas: string[]) => {
-  return word
-    .split('')
-    .map(letra =>
-      letrasUsadas.includes(quitarAcentos(letra.toUpperCase())) ? letra : ' _ ',
-    )
-    .join('');
-};
 
 const styles = StyleSheet.create({
   container: {
