@@ -2,6 +2,7 @@ import {StyleSheet, Text, View, ImageBackground} from 'react-native';
 import React from 'react';
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import Login from '../components/Login';
+import {useNavigation} from '@react-navigation/native';
 
 const image = require('../assets/Ahorcado.png');
 
@@ -44,12 +45,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
     marginBottom: 10,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 18,
-    color: '#ddd',
-    marginBottom: 20,
     textAlign: 'center',
   },
 });
