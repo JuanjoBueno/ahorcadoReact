@@ -7,10 +7,8 @@ import {
 } from 'react-native';
 import React from 'react';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
-import {useAppSelector} from '../redux/hooks';
 
 const image = require('../assets/Ahorcado.png');
-const {name, score} = useAppSelector(state => state.player);
 
 export default function ScoreScreen() {
   return (
@@ -18,7 +16,7 @@ export default function ScoreScreen() {
       <SafeAreaView style={styles.container}>
         <ImageBackground source={image} style={styles.background}>
           <View style={styles.content}>
-            <Text style={styles.title}>Records</Text>
+            <Text style={styles.title}>Records de puntos</Text>
           </View>
         </ImageBackground>
       </SafeAreaView>
@@ -38,8 +36,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   content: {
-    alignContent: 'flex-start',
-    width: '95%',
+    width: '85%',
     paddingVertical: 20,
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.7)',

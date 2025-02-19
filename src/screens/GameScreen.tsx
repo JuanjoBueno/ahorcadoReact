@@ -96,6 +96,7 @@ export default function GameScreen() {
   const handleNext = () => {
     dispatch(changeName({name: ''}));
     Keyboard.dismiss();
+    dispatch(changeScore({score: 0}));
     navigation.navigate('Home');
   };
 
