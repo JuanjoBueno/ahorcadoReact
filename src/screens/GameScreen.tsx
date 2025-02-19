@@ -1,28 +1,33 @@
 import {ActivityIndicator, Button, StyleSheet, Text, View} from 'react-native';
-import React from 'react';
+import React, {useState} from 'react';
 import {useAppDispatch, useAppSelector} from '../redux/hooks';
 import {useWords} from '../hooks/useWords';
 import {ocultarWord, quitarAcentos} from '../logica/logicaJuego';
 import {useNavigation} from '@react-navigation/native';
+import {changeScore} from '../redux/slices/playerSlice';
 
 export default function GameScreen() {
-  const {name} = useAppSelector(state => state.player);
+  const {name, score} = useAppSelector(state => state.player);
   const {currentWord, loadWord} = useWords();
+  const [currentScore, setCurrentScore] = useState(0);
   const dispatch = useAppDispatch();
   const navigation = useNavigation();
+
+  const actualizarScore = () => {
+    dispatch(changeScore({score: currentScore}));
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Jugador: {name}</Text>
       <Text style={styles.subtitle}></Text>
-
       {currentWord ? (
         <Text style={styles.word}>{quitarAcentos(currentWord.palabra)}</Text>
       ) : (
         <ActivityIndicator size="large" color="#A27B5C" />
       )}
-
       <Button title="Obtener otra palabra" onPress={loadWord} color="#A27B5C" />
+      //<Text style={styles.title}>Score: {score}</Text>
     </View>
   );
 }

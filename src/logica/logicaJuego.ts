@@ -14,8 +14,3 @@ export function quitarAcentos(texto: string): string {
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/ñ/g, 'ñ');
 }
-
-export function letrasUsadas(letras: ): string {
-  
-  return letras;
-}
